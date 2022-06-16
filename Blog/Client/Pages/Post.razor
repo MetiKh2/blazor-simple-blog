@@ -1,0 +1,26 @@
+﻿@page "/posts/{Url}"
+@using Markdig
+@inject IBlogService BlogService
+@inject NavigationManager NavigationManager
+@if (BlogPost == null)
+{
+    <div>Blog Not found</div>
+}
+else
+{
+    <div class="text-center">
+    <img class="post-img"  src="@(BlogPost.Image ?? "https://socialistmodernism.com/wp-content/uploads/2017/07/placeholder-image.png?w=640")" />
+
+    </div>
+    <h3>@BlogPost.Title</h3>
+    <div>@((MarkupString)Markdown.ToHtml(BlogPost.Content))</div>
+}
+@code {
+    [Parameter]
+    public string Url { get; set; }
+    private BlogPost BlogPost { get; set; } = new BlogPost();
+    protected override async Task OnInitializedAsync()
+    {
+        BlogPost = await BlogService.GetBlogPostByUrl(Url);
+    }
+}

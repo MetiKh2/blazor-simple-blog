@@ -1,0 +1,70 @@
+﻿@page "/CreateBlog"
+@using Markdig
+@inject IBlogService  BlogService 
+@inject NavigationManager NavigationManager
+<h3>Create a new Blog</h3>
+
+<EditForm Model="newPost" OnValidSubmit="CreareBlogPost">
+    <div>
+        <label for="title">Title</label>
+        <InputText id="title" @bind-Value="newPost.Title" class="form-control"/>
+        <ValidationMessage For="(()=>newPost.Title)"/>
+    </div>
+     <div>
+        <label for="url">Url</label>
+        <InputText id="url" @bind-Value="newPost.Url" class="form-control"/>
+        <ValidationMessage For="(()=>newPost.Url)"/>
+    </div>
+    <div>
+        <label for="image">Image</label>
+        <InputFile id="image" OnChange="OnFileChanged" class="form-control"/>
+        <ValidationMessage For="(()=>newPost.Url)"/>
+    </div>
+     <div>
+        <label for="desc">Description</label>
+        <InputText id="desc" @bind-Value="newPost.Description" class="form-control"/>
+    </div>
+     <div>
+        <label for="content">Content</label>
+        <BlogTextArea id="content" @bind-Value="newPost.Content" class="form-control"/>
+        @*<textarea id="concctent"  @bind-value="newPost.Content" @bind-value:event="oninput" class="form-control"/>*@
+    </div>
+     <div>
+        <label for="contentPreview">Content</label>
+        <div id="contentPreview" class="form-control h-100">@((MarkupString)Markdown.ToHtml(newPost.Content))</div>
+    </div>
+     <div>
+        <label for="date">Date</label>
+        <InputDate id="date" @bind-Value="newPost.DateCreated" class="form-control"/>
+    </div>
+     <div>
+        <label for="ispublishes">Published</label>
+        <InputCheckbox id="ispublishes" @bind-Value="newPost.IsPublished" class="form-check"/>
+    </div>
+      <div>
+        <label for="author">Author</label>
+        <InputText id="author" @bind-Value="newPost.Author" class="form-control"/>
+    </div>
+    <DataAnnotationsValidator/>
+    @*<ValidationSummary/>*@
+    <button type="submit" class="btn btn-primary mt-3">Create</button>
+</EditForm>
+@code {
+    public BlogPost newPost { get; set; } = new BlogPost();
+    async Task CreareBlogPost()
+    {
+        var result = await BlogService.CreateBlogPost(newPost);
+        NavigationManager.NavigateTo($"/posts/{result.Url}");
+    }
+    async Task OnFileChanged(InputFileChangeEventArgs e)
+    {
+        var format = "image/png";
+        var resizedImage = await e.File.RequestImageFileAsync(format,300,300);
+        var buffer = new byte[resizedImage.Size];
+        await resizedImage.OpenReadStream().ReadAsync(buffer);
+        var imageData = 
+        $"data:{format};base64,{Convert.ToBase64String(buffer)}";
+        newPost.Image = imageData;
+        Console.WriteLine(newPost.Image);
+    }
+}
